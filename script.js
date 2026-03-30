@@ -330,6 +330,63 @@ function animate() {
 animate();
 
 
+// ===== EDUCATION ROLODEX =====
+(function () {
+    const cylinder  = document.getElementById("rolodexCylinder");
+    const scene     = document.getElementById("rolodexScene");
+    const btnUp     = document.getElementById("eduUp");
+    const btnDown   = document.getElementById("eduDown");
+    const dotsEl    = document.getElementById("rolodexDots");
+
+    if (!cylinder) return;
+
+    const cards     = Array.from(cylinder.querySelectorAll(".rolodex-card"));
+    const dots      = Array.from(dotsEl.querySelectorAll(".rdot"));
+    const total     = cards.length;
+    const STEP      = 360 / total;   // 90° for 4 cards
+    const RADIUS    = 250;           // px translateZ
+
+    let current     = 0;
+    let locked      = false;
+    let autoTimer   = null;
+
+    // Place each card on the cylinder
+    cards.forEach((card, i) => {
+        card.style.transform = `rotateX(${i * STEP}deg) translateZ(${RADIUS}px)`;
+    });
+
+    function goTo(index) {
+        current = ((index % total) + total) % total;
+        cylinder.style.transform = `rotateX(${-current * STEP}deg)`;
+        dots.forEach((d, i) => d.classList.toggle("is-active", i === current));
+    }
+
+    function next() { goTo(current + 1); }
+    function prev() { goTo(current - 1); }
+
+    function resetAuto() {
+        clearInterval(autoTimer);
+        autoTimer = setInterval(next, 3400);
+    }
+
+    btnDown.addEventListener("click", () => { next(); resetAuto(); });
+    btnUp.addEventListener("click",   () => { prev(); resetAuto(); });
+
+    // Scroll inside scene — one step per gesture, debounced
+    scene.addEventListener("wheel", (e) => {
+        e.preventDefault();
+        if (locked) return;
+        locked = true;
+        e.deltaY > 0 ? next() : prev();
+        resetAuto();
+        setTimeout(() => { locked = false; }, 560);
+    }, { passive: false });
+
+    goTo(0);
+    resetAuto();
+})();
+
+
 // ===== SCROLL WAVE REVEAL (RUNS ONCE) =====
 const waveSections = document.querySelectorAll(".wave-section");
 

@@ -1,79 +1,79 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gallery | J. Flores Monroy</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gallery | Jonathan Flores Monroy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&family=Playfair+Display:wght@700&display=swap">
     <link rel="stylesheet" href="gallery-style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 </head>
 <body>
 
     <nav class="navbar">
-        <a href="index.html" class="back-btn">← Volver a Research</a>
-        <div class="logo">GALLERY <span>VISUAL EVIDENCE</span></div>
+        <a href="index.html" class="back-btn">&#8592; Back to Home</a>
+        <div class="logo">GALLERY <span>Visual Evidence</span></div>
     </nav>
 
     <header class="gallery-header">
-        <h1>Trayectoria y Evidencia</h1>
-        <p>Registros visuales de conferencias internacionales, reconocimientos y desarrollo de campo.</p>
+        <h1>Journey &amp; Evidence</h1>
+        <p>Visual records of international conferences, recognitions, and field research.</p>
     </header>
 
     <div class="filter-container">
-        <button class="filter-btn active" onclick="filterGallery('all')">All</button>
-        <button class="filter-btn" onclick="filterGallery('conferences')">Conferences</button>
-        <button class="filter-btn" onclick="filterGallery('awards')">Awards</button>
-        <button class="filter-btn" onclick="filterGallery('field')">Field Work</button>
+        <button class="filter-btn active" onclick="filterGallery(this, 'all')">All</button>
+        <button class="filter-btn" onclick="filterGallery(this, 'conferences')">Conferences</button>
+        <button class="filter-btn" onclick="filterGallery(this, 'awards')">Awards</button>
+        <button class="filter-btn" onclick="filterGallery(this, 'field')">Field Work</button>
     </div>
 
     <main class="gallery-grid" id="galleryGrid">
-        
+
         <div class="gallery-item conferences">
-            <img src="https://via.placeholder.com/600x800" alt="Conferencia Japón">
-            <div class="overlay">
+            <img src="https://via.placeholder.com/600x800" alt="Tokyo, Japan — Conference presentation">
+            <div class="item-overlay">
                 <div class="text">
                     <h3>Tokyo, Japan</h3>
-                    <p>Presentación de SOTA en Video Anomaly Detection.</p>
+                    <p>SOTA presentation on Video Anomaly Detection at UEC Tokyo.</p>
                 </div>
             </div>
         </div>
 
         <div class="gallery-item awards">
-            <img src="https://via.placeholder.com/600x400" alt="Entrega de Patente">
-            <div class="overlay">
+            <img src="https://via.placeholder.com/600x400" alt="Patent registration ceremony">
+            <div class="item-overlay">
                 <div class="text">
-                    <h3>Registro de Patente</h3>
-                    <p>Reconocimiento oficial por innovación tecnológica.</p>
+                    <h3>Patent Registration</h3>
+                    <p>Official recognition for technological innovation — MX/a/2022/015919.</p>
                 </div>
             </div>
         </div>
 
         <div class="gallery-item field">
-            <img src="https://via.placeholder.com/600x700" alt="Field Work">
-            <div class="overlay">
+            <img src="https://via.placeholder.com/600x700" alt="Field testing session">
+            <div class="item-overlay">
                 <div class="text">
                     <h3>Dataset Collection</h3>
-                    <p>Pruebas de modelos en tiempo real en Insurgentes Sur.</p>
+                    <p>Real-time model testing in public transportation environments.</p>
                 </div>
             </div>
         </div>
 
-        </main>
+    </main>
 
     <script>
-        function filterGallery(category) {
-            const items = document.querySelectorAll('.gallery-item');
+        function filterGallery(btn, category) {
+            const items   = document.querySelectorAll('.gallery-item');
             const buttons = document.querySelectorAll('.filter-btn');
 
-            // Actualizar botones
-            buttons.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            buttons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
 
-            // Filtrar elementos
             items.forEach(item => {
                 if (category === 'all' || item.classList.contains(category)) {
-                    item.style.display = 'block';
-                    setTimeout(() => { item.style.opacity = '1'; }, 10);
+                    item.style.display  = 'block';
+                    item.style.opacity  = '0';
+                    setTimeout(() => { item.style.opacity = '1'; }, 20);
                 } else {
                     item.style.opacity = '0';
                     setTimeout(() => { item.style.display = 'none'; }, 300);
@@ -81,6 +81,5 @@
             });
         }
     </script>
-
 </body>
 </html>

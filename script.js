@@ -1,355 +1,241 @@
-const overlay = document.getElementById("overlayMenu");
-const menuBtn = document.getElementById("menuBtn");
-const closeBtn = document.getElementById("closeMenu");
-const panel = document.querySelector(".overlay-panel");
+/* ===== HAMBURGER MENU ===== */
+const overlay  = document.getElementById('overlayMenu');
+const menuBtn  = document.getElementById('menuBtn');
+const closeBtn = document.getElementById('closeMenu');
+const panel    = document.querySelector('.overlay-panel');
 
+function openMenu() {
+    overlay.classList.add('open');
+    menuBtn.classList.add('is-active');
+    menuBtn.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+}
 
+function closeMenu() {
+    overlay.classList.remove('open');
+    menuBtn.classList.remove('is-active');
+    menuBtn.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+}
 
+menuBtn.addEventListener('click', openMenu);
+closeBtn.addEventListener('click', closeMenu);
 
-
-// Abrir
-menuBtn.addEventListener("click", () => {
-    overlay.classList.add("open");
+overlay.addEventListener('click', (e) => {
+    if (!panel.contains(e.target)) closeMenu();
 });
 
-// Cerrar con X
-closeBtn.addEventListener("click", () => {
-    overlay.classList.remove("open");
+// Close menu on overlay-link click (navigate to section)
+document.querySelectorAll('.overlay-link').forEach(link => {
+    link.addEventListener('click', closeMenu);
 });
 
-// Cerrar si hago click fuera del panel
-overlay.addEventListener("click", (e) => {
-    if (!panel.contains(e.target)) {
-        overlay.classList.remove("open");
-    }
+// Close on Escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeMenu();
 });
 
 
-
-// ===== CAROUSEL =====
-const slides = document.querySelectorAll(".carousel-img");
+/* ===== HERO CAROUSEL ===== */
+const slides = document.querySelectorAll('.carousel-img');
 let currentSlide = 0;
 
 function showSlide(index) {
     slides.forEach((img, i) => {
-        img.classList.remove("active");
-        if (i === index) img.classList.add("active");
+        img.classList.toggle('active', i === index);
     });
 }
 
-document.querySelector(".next").addEventListener("click", () => {
+document.querySelector('.carousel-btn.next').addEventListener('click', () => {
     currentSlide = (currentSlide + 1) % slides.length;
     showSlide(currentSlide);
 });
 
-document.querySelector(".prev").addEventListener("click", () => {
-    currentSlide =
-        (currentSlide - 1 + slides.length) % slides.length;
+document.querySelector('.carousel-btn.prev').addEventListener('click', () => {
+    currentSlide = (currentSlide - 1 + slides.length) % slides.length;
     showSlide(currentSlide);
 });
 
-// Auto cambio cada 4s
-setInterval(() => {
+const autoSlide = setInterval(() => {
     currentSlide = (currentSlide + 1) % slides.length;
     showSlide(currentSlide);
 }, 4000);
 
 
-// // ===== PERFECT INFINITE CAROUSEL WITH CENTER ZOOM =====
-// const track = document.querySelector('.photo-carousel');
-// let items = Array.from(document.querySelectorAll('.photo-item'));
+/* ===== PHOTO SWIPER (EXPERIENCE) — init after DOM & shuffle ===== */
+document.addEventListener('DOMContentLoaded', () => {
+    const wrapper = document.getElementById('swiper-random');
+    if (!wrapper) return;
 
-// const speed = 0.8;
-// let x = 0;
+    // Fisher–Yates shuffle
+    const items = Array.from(wrapper.children);
+    for (let i = items.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [items[i], items[j]] = [items[j], items[i]];
+    }
+    items.forEach(item => wrapper.appendChild(item));
 
-// // duplicar para loop continuo
-// items.forEach(el => track.appendChild(el.cloneNode(true)));
-// items = Array.from(document.querySelectorAll('.photo-item'));
+    // RAF loop: reads the actual pixel position of every slide on each frame
+    // via getBoundingClientRect() and applies a Gaussian scale curve.
+    // Using transform:scale (not width/height) → container height is fixed,
+    // nothing below the carousel bounces.
+    function startScaleLoop(swiper) {
+        const el = swiper.el;
+        (function loop() {
+            const sr   = el.getBoundingClientRect();
+            const cx   = sr.left + sr.width / 2;
+            const half = sr.width / 2 || 1;
 
-// const itemWidth = items[0].offsetWidth + 40;
+            swiper.slides.forEach(slide => {
+                const r = slide.getBoundingClientRect();
+                // normalised distance from center: 0 = center, 1 = at swiper edge
+                const p = Math.abs(r.left + r.width / 2 - cx) / half;
+                // Gaussian bell: sharp peak at center, fast falloff on sides
+                // coefficient 9 → adjacent slide (~40% of halfW) gets scale ≈0.66
+                const t = Math.exp(-p * p * 9);
+                slide.style.transform = `scale(${(0.38 + 1.17 * t).toFixed(3)})`;
+                slide.style.opacity   = (0.22 + 0.78 * t).toFixed(3);
+                slide.style.filter    = `brightness(${(0.35 + 0.65 * t).toFixed(2)}) saturate(${(0.40 + 0.60 * t).toFixed(2)})`;
+            });
 
-// // --- CENTER DETECTION THROTTLED ---
-// let lastCenterCheck = 0;
+            requestAnimationFrame(loop);
+        })();
+    }
 
-// function checkCenter(timestamp) {
-//     if (timestamp - lastCenterCheck < 120) return; // throttling
-//     lastCenterCheck = timestamp;
-
-//     const center = window.innerWidth / 2;
-
-//     let closest = null;
-//     let minDist = Infinity;
-
-//     items.forEach(item => {
-//         const rect = item.getBoundingClientRect();
-//         const itemCenter = rect.left + rect.width / 2;
-//         const dist = Math.abs(center - itemCenter);
-//         if (dist < minDist) {
-//             minDist = dist;
-//             closest = item;
-//         }
-//     });
-
-//     items.forEach(i => i.classList.remove("center"));
-//     if (closest) closest.classList.add("center");
-// }
-
-// function animate(timestamp) {
-//     x -= speed;
-//     track.style.transform = `translate3d(${x}px,0,0)`;
-
-//     const first = items[0];
-//     const rect = first.getBoundingClientRect();
-
-//     if (rect.right < 0) {
-//         track.appendChild(first);
-//         items.push(items.shift());
-//         x += itemWidth;
-//     }
-
-//     checkCenter(timestamp);
-
-//     requestAnimationFrame(animate);
-// }
-
-// animate(0);
-
-
-/////////////////////////////////
-
-
-document.addEventListener("DOMContentLoaded", () => {
-  const wrapper = document.getElementById("swiper-random");
-  const slides = Array.from(wrapper.children);
-
-  // Fisher–Yates shuffle
-  for (let i = slides.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [slides[i], slides[j]] = [slides[j], slides[i]];
-  }
-
-  slides.forEach(slide => wrapper.appendChild(slide));
-
-  // 🔥 Inicializar Swiper DESPUÉS del shuffle
-  var swiper = new Swiper(".my-carousel", {
-    effect: "coverflow",
-    centeredSlides: true,
-    slidesPerView: "auto",
-    loop: true,
-    grabCursor: true,
-    coverflowEffect: {
-      rotate: 0,
-      stretch: 0,
-      depth: 150,
-      modifier: 2,
-      slideShadows: false
-    },
-    autoplay: {
-      delay: 2000,
-      disableOnInteraction: false
-    },
-    speed: 1500
-  });
+    new Swiper('.my-carousel', {
+        centeredSlides: true,
+        slidesPerView: 'auto',
+        spaceBetween: 14,
+        loop: true,
+        grabCursor: true,
+        observer: true,
+        observeParents: true,
+        autoplay: {
+            delay: 0,                    // no pause → constant flow
+            disableOnInteraction: false,
+            pauseOnMouseEnter: true,
+        },
+        speed: 3200,                     // slow, cinematic movement
+        on: {
+            init: startScaleLoop,        // starts the RAF loop once Swiper is ready
+        },
+    });
 });
 
 
-
-
-var swiper = new Swiper(".my-carousel", {
-  effect: "coverflow",
-  centeredSlides: true,
-  slidesPerView: "auto",
-  loop: true,
-  grabCursor: true,
-  coverflowEffect: {
-    rotate: 0,
-    stretch: 0,
-    depth: 150,
-    modifier: 2,
-    slideShadows: false
-  },
-  autoplay: {
-    delay: 2000,
-    disableOnInteraction: false
-  },
-  speed: 1500
-});
-
-
-
-
-//--------------------------------------------------
-// PROJECTS DATA — Add as many as you want
-//--------------------------------------------------
-
+/* ===== PROJECTS CAROUSEL ===== */
 const projects = [
     {
-        title: "TransLowNet",
-        img: "img_John/TransLowNEt.png",
-        description: "AI framework designed to identify violent and abnormal events in public transportation surveillance, supporting early awareness, improved safety, and informed decision-making to help protect passengers and save lives.",
+        title: 'TransLowNet',
+        img: 'img_John/TransLowNEt.png',
+        description: 'AI framework designed to identify violent and abnormal events in public transportation surveillance, supporting early awareness, improved safety, and informed decision-making to help protect passengers and save lives.',
         links: [
-            {text: "Video", url: "https://www.youtube.com/watch?v=Lf5jlRM7C8A"},
-            {text: "Official Web", url: "https://www.ipn.mx/gacetapolitecnica/ver-detalle.html?g=195"},
-            {text: "Demo", url: "https://github.com/JonathanFlores2503/TransLowNet_V2.git"}
-        ]
+            { text: 'Video',       url: 'https://www.youtube.com/watch?v=Lf5jlRM7C8A' },
+            { text: 'Official Web', url: 'https://www.ipn.mx/gacetapolitecnica/ver-detalle.html?g=195' },
+            { text: 'Demo',        url: 'https://github.com/JonathanFlores2503/TransLowNet_V2.git' },
+        ],
     },
     {
-        title: "SOMN-IA",
-        img: "img_John/Somn_IA.png",
-        description: "AI-based vision system designed to detect driver drowsiness and distraction, supporting accident prevention and helping protect lives by improving road safety in real driving conditions.",
+        title: 'SOMN-IA',
+        img: 'img_John/Somn_IA.png',
+        description: 'AI-based vision system designed to detect driver drowsiness and distraction, supporting accident prevention and helping protect lives by improving road safety in real driving conditions.',
         links: [
-            {text: "Video", url: "https://www.youtube.com/watch?v=035Qq5egiS8"},
-            {text: "Paper", url: "https://www.mdpi.com/2079-9292/11/16/2558"},
-            {text: "Patent: MX/a/2022/015919", url: "https://vidoc.impi.gob.mx/busquedarapida"}
-            
-        ]
+            { text: 'Video',                url: 'https://www.youtube.com/watch?v=035Qq5egiS8' },
+            { text: 'Paper',               url: 'https://www.mdpi.com/2079-9292/11/16/2558' },
+            { text: 'Patent MX/a/2022/015919', url: 'https://vidoc.impi.gob.mx/busquedarapida' },
+        ],
     },
     {
-        title: "PJ-System",
-        img: "img_John/img_6.jpg",
-        description: "Embedded security system designed to prevent motorcycle theft and enhance rider safety by automatically disabling critical vehicle functions in unauthorized situations.",
+        title: 'PJ-System',
+        img: 'img_John/img_6.jpg',
+        description: 'Embedded security system designed to prevent motorcycle theft and enhance rider safety by automatically disabling critical vehicle functions in unauthorized situations.',
         links: [
-            {text: "Video", url: "https://youtu.be/_nhffUBDrV0"},
-            {text: "Reportage", url: "https://www.facebook.com/share/v/1D7zPTeu6G/"},
-            {text: "News", url: "https://www.excelsior.com.mx/nacional/disena-el-ipn-un-sistema-antirrobo-de-motocicletas/1394040"}
-        ]
+            { text: 'Video',    url: 'https://youtu.be/_nhffUBDrV0' },
+            { text: 'Reportage', url: 'https://www.facebook.com/share/v/1D7zPTeu6G/' },
+            { text: 'News',     url: 'https://www.excelsior.com.mx/nacional/disena-el-ipn-un-sistema-antirrobo-de-motocicletas/1394040' },
+        ],
     },
-    // {
-    //     title: "Project 01",
-    //     img: "img/img_4.jpg",
-    //     description: "Generic description for project 01.",
-    //     links: [{text: "More Info", url: "#"}]
-    // },
-    // {
-    //     title: "Project 02",
-    //     img: "img/img_5.jpg",
-    //     description: "Generic description for project 02.",
-    //     links: [{text: "More Info", url: "#"}]
-    // },
-    // {
-    //     title: "Project 03",
-    //     img: "img/img_6.jpg",
-    //     description: "Generic description for project 03.",
-    //     links: [{text: "More Info", url: "#"}]
-    // }
 ];
 
-//--------------------------------------------------
-// CAROUSEL LOGIC
-//--------------------------------------------------
-
 let currentIndex = 0;
-
-const carousel = document.getElementById("projectCarousel");
+const carousel = document.getElementById('projectCarousel');
 
 function renderCarousel() {
-    carousel.innerHTML = "";
+    carousel.innerHTML = '';
 
-    // L + C + R = 3 cards visible
-    const leftIndex = (currentIndex - 1 + projects.length) % projects.length;
+    const leftIndex  = (currentIndex - 1 + projects.length) % projects.length;
     const rightIndex = (currentIndex + 1) % projects.length;
 
-    const visible = [leftIndex, currentIndex, rightIndex];
-
-    visible.forEach((i, idx) => {
+    [leftIndex, currentIndex, rightIndex].forEach((i) => {
         const p = projects[i];
-
-        const card = document.createElement("div");
-        card.className = "project-card";
-        if (i === currentIndex) card.classList.add("active");
+        const card = document.createElement('div');
+        card.className = 'project-card' + (i === currentIndex ? ' active' : '');
 
         card.innerHTML = `
-            <img class="project-image" src="${p.img}">
+            <img class="project-image" src="${p.img}" alt="${p.title}" loading="lazy">
             <div class="project-content">
                 <h2>${p.title}</h2>
                 <p>${p.description}</p>
                 <div class="project-links">
-                    ${p.links.map(l => `<a href="${l.url}" target="_blank">${l.text}</a>`).join("")}
+                    ${p.links.map(l => `<a href="${l.url}" target="_blank" rel="noopener noreferrer">${l.text}</a>`).join('')}
                 </div>
-            </div>
-        `;
+            </div>`;
 
         carousel.appendChild(card);
     });
 }
 
-document.getElementById("nextBtn").onclick = () => {
+document.getElementById('nextBtn').addEventListener('click', () => {
     currentIndex = (currentIndex + 1) % projects.length;
     renderCarousel();
-};
+});
 
-document.getElementById("prevBtn").onclick = () => {
+document.getElementById('prevBtn').addEventListener('click', () => {
     currentIndex = (currentIndex - 1 + projects.length) % projects.length;
     renderCarousel();
-};
+});
 
-// Inicializar
 renderCarousel();
 
 
-
-
-
-const track = document.getElementById("logosTrack");
+/* ===== LOGOS INFINITE SCROLL ===== */
+const track         = document.getElementById('logosTrack');
 const originalLogos = Array.from(track.children);
 
-// 1️⃣ Clonar logos hasta cubrir 2× viewport (controlado)
-function fillTrackSafely() {
-  const viewportWidth = track.parentElement.offsetWidth;
-  let trackWidth = track.scrollWidth;
+(function fillTrack() {
+    const targetWidth = track.parentElement.offsetWidth * 2;
+    let iterations    = 0;
 
-  let i = 0;
-  while (trackWidth < viewportWidth * 2 && i < 10) {
-    originalLogos.forEach(logo => {
-      const clone = logo.cloneNode(true);
-      track.appendChild(clone);
-    });
-    trackWidth = track.scrollWidth;
-    i++;
-  }
-}
+    while (track.scrollWidth < targetWidth && iterations < 8) {
+        originalLogos.forEach(logo => track.appendChild(logo.cloneNode(true)));
+        iterations++;
+    }
+})();
 
-fillTrackSafely();
+let logosX = 0;
+const logosSpeed = 0.45;
 
-// 2️⃣ Animación infinita real
-let x = 0;
-const speed = 0.5;
-
-function animate() {
-  x -= speed;
-
-  const resetPoint = track.scrollWidth / 2;
-  if (Math.abs(x) >= resetPoint) {
-    x = 0;
-  }
-
-  track.style.transform = `translateX(${x}px)`;
-  requestAnimationFrame(animate);
-}
-
-animate();
+(function animateLogos() {
+    logosX -= logosSpeed;
+    if (Math.abs(logosX) >= track.scrollWidth / 2) logosX = 0;
+    track.style.transform = `translateX(${logosX}px)`;
+    requestAnimationFrame(animateLogos);
+})();
 
 
-// ===== SCROLL WAVE REVEAL (RUNS ONCE) =====
-const waveSections = document.querySelectorAll(".wave-section");
-
+/* ===== SCROLL WAVE REVEAL ===== */
 const waveObserver = new IntersectionObserver(
-  (entries, observer) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add("revealed");
-        observer.unobserve(entry.target); // 👈 SOLO UNA VEZ
-      }
-    });
-  },
-  {
-    threshold: 0.15
-  }
+    (entries, obs) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('revealed');
+                obs.unobserve(entry.target);
+            }
+        });
+    },
+    { threshold: 0.12 }
 );
 
-waveSections.forEach(section => {
-  waveObserver.observe(section);
+document.querySelectorAll('.wave-section').forEach(section => {
+    waveObserver.observe(section);
 });
-
-
-
